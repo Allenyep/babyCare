@@ -115,21 +115,21 @@ onMounted(() => {
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useBabyStore } from '@/stores/baby'
+import { useTaskStore } from '@/stores/task'
 import { useRouter } from 'vue-router'
 import type { Task, TimeSlot } from '@/types'
+import api from '@/api/client'
 
 const router = useRouter()
 const babyStore = useBabyStore()
+const taskStore = useTaskStore()
 
 const currentBaby = computed(() => babyStore.currentBaby)
+const loading = ref(false)
 
-// Mock data - TODO: Replace with API calls
-const selectedDate = ref(new Date())
-const totalTasks = ref(12)
-const completedTasks = ref(5)
-const completionRate = computed(() => (completedTasks.value / totalTasks.value) * 100)
+const selectedDate = ref(new Date().toISOString().split('T')[0])
 const momFatigue = ref(0.35)
 const dadFatigue = ref(0.25)
 
@@ -142,54 +142,47 @@ const timeSlots = [
   { code: 'night', name: '夜间', icon: '🌙', time: '21:00-06:00' }
 ]
 
-// Mock tasks - TODO: Replace with API calls
-const allTasks: Task[] = [
-  {
-    id: 1,
-    baby_id: 1,
-    name: '喂奶',
-    category: 'feeding' as any,
-    description: '早餐奶',
-    duration_minutes: 20,
-    priority: 9,
-    date: new Date().toISOString().split('T')[0],
-    time_slot: 'early' as any,
-    assigned_to: 1,
-    assigned_to_detail: { id: 1, name: '妈妈' },
-    status: 'completed' as any
-  },
-  {
-    id: 2,
-    baby_id: 1,
-    name: '换尿布',
-    category: 'diaper' as any,
-    description: '晨间换尿布',
-    duration_minutes: 5,
-    priority: 9,
-    date: new Date().toISOString().split('T')[0],
-    time_slot: 'early' as any,
-    assigned_to: 2,
-    assigned_to_detail: { id: 2, name: '爸爸' },
-    status: 'completed' as any
-  },
-  {
-    id: 3,
-    baby_id: 1,
-    name: '积木游戏',
-    category: 'education' as any,
-    description: '堆积木，锻炼精细动作',
-    duration_minutes: 30,
-    priority: 6,
-    date: new Date().toISOString().split('T')[0],
-    time_slot: 'morning' as any,
-    assigned_to: 2,
-    assigned_to_detail: { id: 2, name: '爸爸' },
-    status: 'pending' as any
+// Using task store data
+const allTasks = computed(() => taskStore.tasks)
+const totalTasks = computed(() => allTasks.value.length)
+const completedTasksCount = computed(() => taskStore.completedTasks.length)
+const completionRate = computed(() => {
+  if (totalTasks.value === 0) return 0
+  return (completedTasksCount.value / totalTasks.value) * 100
+})
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    // Load babies if not loaded
+    if (!babyStore.babies.length) {
+      await babyStore.fetchBabies()
+    }
+
+    // Set current baby if not set
+    if (!currentBaby.value && babyStore.babies.length > 0) {
+      babyStore.setCurrentBaby(babyStore.babies[0])
+    }
+
+    // Load tasks for current baby
+    if (currentBaby.value) {
+      await taskStore.fetchTasks({
+        baby_id: currentBaby.value.id,
+        date: selectedDate.value
+      })
+    }
+
+    // Load fatigue data (mock for now)
+    // TODO: Implement real fatigue API call
+  } catch (error) {
+    console.error('Failed to load data:', error)
+  } finally {
+    loading.value = false
   }
-]
+})
 
 function getTasksBySlot(slotCode: string) {
-  return allTasks.filter(t => t.time_slot === slotCode)
+  return allTasks.value.filter(t => t.time_slot === slotCode)
 }
 
 function getFatigueColor(score: number) {
@@ -200,12 +193,11 @@ function getFatigueColor(score: number) {
 }
 
 function switchBaby() {
-  router.push('/baby')
+  router.push('/baby-profile')
 }
 
-function completeTask(task: Task) {
-  console.log('Complete task:', task)
-  // TODO: API call
+async function completeTask(task: Task) {
+  await taskStore.completeTask(task.id)
 }
 </script>
 

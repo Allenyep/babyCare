@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import engine
 from app.db import Base
-from app.api import babies, parents, tasks, knowledge, scheduler
+from app.api import babies, parents, tasks, knowledge, scheduler, fatigue
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -36,7 +36,8 @@ async def root():
             "parents": "/api/v1/parents",
             "tasks": "/api/v1/tasks",
             "knowledge": "/api/v1/knowledge",
-            "scheduler": "/api/v1/scheduler"
+            "scheduler": "/api/v1/scheduler",
+            "fatigue": "/api/v1/fatigue"
         }
     }
 
@@ -51,3 +52,4 @@ app.include_router(parents.router, prefix="/api/v1")
 app.include_router(tasks.router, prefix="/api/v1")
 app.include_router(knowledge.router, prefix="/api/v1")
 app.include_router(scheduler.router, prefix="/api/v1")
+app.include_router(fatigue.router, prefix="/api/v1")
