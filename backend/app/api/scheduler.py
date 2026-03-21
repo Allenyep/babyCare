@@ -5,6 +5,7 @@ from datetime import date
 
 from app.db.database import get_db
 from app.services.scheduler import scheduler_service
+from app.services.optimizer import load_balancing_optimizer
 from app.schemas.scheduler import (
     DailySchedule,
     SchedulePreview,
@@ -230,33 +231,47 @@ def optimize_schedule(
     根据指定目标优化任务分配：
     - balance: 负载均衡（最小化父母负担差异）
     - sleep: 睡眠优先（保证双方睡眠时间）
-
-    TODO: 实现优化算法（当前返回建议）
     """
     try:
-        # TODO: 实现真正的优化算法
-        # 当前返回简单的建议
+        # 生成当前日程
+        # TODO: 从数据库加载实际日程
+        baby_name = "宝宝"
+        baby_age_months = 6
 
-        suggestions = []
+        schedule = scheduler_service.generate_daily_schedule(
+            baby_id=baby_id,
+            baby_name=baby_name,
+            baby_age_months=baby_age_months,
+            target_date=target_date
+        )
 
         if optimize_for == "balance":
-            suggestions = [
-                "调整3个任务从妈妈到爸爸以平衡负担",
-                "考虑将上午的部分任务移到下午"
-            ]
+            # 使用负载均衡优化器
+            optimization_result = load_balancing_optimizer.optimize_schedule(schedule)
+            return {
+                "optimize_for": optimize_for,
+                "target_date": target_date,
+                "current_balance_score": optimization_result["current_balance_score"],
+                "estimated_balance_score": optimization_result["estimated_balance_score"],
+                "suggestions": optimization_result["suggestions"],
+                "optimization_needed": optimization_result["optimization_needed"],
+                "message": optimization_result["message"]
+            }
         elif optimize_for == "sleep":
-            suggestions = [
-                "将夜间任务全部分配给一方，另一方保证睡眠",
-                "减少晚间任务数量，提前到下午完成"
-            ]
+            # 睡眠优先优化（简化版）
+            return {
+                "optimize_for": optimize_for,
+                "target_date": target_date,
+                "message": "睡眠优先优化功能开发中",
+                "suggestions": [
+                    "将夜间任务全部分配给一方，另一方保证睡眠",
+                    "减少晚间任务数量，提前到下午完成"
+                ]
+            }
         else:
-            suggestions = ["未知的优化目标"]
+            raise HTTPException(status_code=400, detail=f"Unknown optimization goal: {optimize_for}")
 
-        return {
-            "optimize_for": optimize_for,
-            "suggestions": suggestions,
-            "message": "优化功能开发中，当前仅返回建议"
-        }
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
