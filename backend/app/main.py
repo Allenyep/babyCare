@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import engine
 from app.db import Base
+from app.api import babies, parents, tasks
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -29,10 +30,20 @@ async def root():
     return {
         "message": "Welcome to BabyCare API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
+        "endpoints": {
+            "babies": "/api/v1/babies",
+            "parents": "/api/v1/parents",
+            "tasks": "/api/v1/tasks"
+        }
     }
 
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# Include routers
+app.include_router(babies.router, prefix="/api/v1")
+app.include_router(parents.router, prefix="/api/v1")
+app.include_router(tasks.router, prefix="/api/v1")
