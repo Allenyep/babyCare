@@ -1,4 +1,3 @@
-
 from datetime import date, datetime
 from typing import Optional
 from sqlalchemy import String, Integer, Date

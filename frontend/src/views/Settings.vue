@@ -101,10 +101,14 @@ function clearCache() {
                 <span class="label">语言</span>
                 <span class="description">选择应用显示语言</span>
               </div>
-              <n-select v-model:value="generalSettings.language" style="width: 200px">
-                <n-option value="zh-CN" label="简体中文" />
-                <n-option value="en-US" label="English" />
-              </n-select>
+              <n-select
+                v-model:value="generalSettings.language"
+                :options="[
+                  { value: 'zh-CN', label: '简体中文' },
+                  { value: 'en-US', label: 'English' }
+                ]"
+                style="width: 200px"
+              />
             </div>
 
             <n-divider />
@@ -440,6 +444,7 @@ function clearCache() {
   padding: var(--spacing-md);
   max-width: 1000px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
@@ -555,5 +560,40 @@ function clearCache() {
   font-size: 14px;
   color: var(--text-secondary);
   margin: var(--spacing-xs) 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 0; /* Remove padding since App.vue handles it */
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .section-header h1 {
+    font-size: 24px;
+  }
+
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .setting-label {
+    width: 100%;
+  }
+
+  .setting-item > *:not(.setting-label) {
+    width: 100%;
+  }
+
+  .danger-actions {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

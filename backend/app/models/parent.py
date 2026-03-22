@@ -1,9 +1,11 @@
-
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy import String, Integer, Float, Text, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
+
+if TYPE_CHECKING:
+    from app.models.task import Task
 
 
 class Parent(Base):
@@ -32,5 +34,5 @@ class Parent(Base):
 
     # Relationships
     baby: Mapped["Baby"] = relationship("Baby", back_populates="parents")
-    tasks: Mapped[list["Task"]] = relationship("Task", back_populates="assigned_to_detail")
+    # tasks relationship removed temporarily due to foreign key ambiguity
     completions: Mapped[list["TaskCompletion"]] = relationship("TaskCompletion", back_populates="parent")

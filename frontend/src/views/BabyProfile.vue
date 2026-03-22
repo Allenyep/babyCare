@@ -1,32 +1,61 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBabyStore } from '@/stores/baby'
+import { useMessage } from 'naive-ui'
 import type { Baby, GrowthRecord } from '@/types'
 
 const router = useRouter()
 const babyStore = useBabyStore()
+const message = useMessage()
 
 const baby = ref<Baby | null>(null)
 const growthRecords = ref<GrowthRecord[]>([])
 const loading = ref(false)
+const isEditing = ref(false)
 
 const form = ref({
   name: '',
   nickname: '',
-  birthday: '',
+  birthday: null as number | null,
   gender: 'male' as 'male' | 'female'
 })
 
-const showForm = ref(false)
+const showForm = computed(() => {
+  return !baby.value || isEditing.value
+})
 
-onMounted(() => {
-  const currentBaby = babyStore.currentBaby
-  if (currentBaby) {
-    baby.value = currentBaby
-    loadGrowthRecords()
-  } else {
-    showForm.value = true
+onMounted(async () => {
+  loading.value = true
+  try {
+    // Try to get current baby from store
+    let currentBaby = babyStore.currentBaby
+
+    // If no current baby, try to load babies
+    if (!currentBaby) {
+      try {
+        await babyStore.fetchBabies()
+      } catch (apiError) {
+        console.warn('Failed to fetch babies from API:', apiError)
+        // Continue anyway - will show create form
+      }
+      currentBaby = babyStore.currentBaby
+
+      // If still no baby, set the first one as current
+      if (!currentBaby && babyStore.babies.length > 0) {
+        babyStore.setCurrentBaby(babyStore.babies[0])
+        currentBaby = babyStore.babies[0]
+      }
+    }
+
+    if (currentBaby) {
+      baby.value = currentBaby
+      loadGrowthRecords()
+    }
+  } catch (error) {
+    console.error('Failed to load baby data:', error)
+  } finally {
+    loading.value = false
   }
 })
 
@@ -35,12 +64,131 @@ function loadGrowthRecords() {
   // TODO: API call
 }
 
-function createBaby() {
+async function createBaby() {
+  console.log('createBaby called', form.value)
+
   if (!form.value.name || !form.value.birthday) {
+    message.warning('请填写宝宝姓名和生日')
     return
   }
-  // TODO: API call
-  showForm.value = false
+
+  loading.value = true
+  try {
+    // Convert timestamp to date string for API
+    const birthday = new Date(form.value.birthday).toISOString().split('T')[0]
+    const payload = {
+      name: form.value.name,
+      nickname: form.value.nickname || undefined,
+      birthday: birthday,
+      gender: form.value.gender
+    }
+
+    console.log('Creating baby with payload:', payload)
+
+    // Create baby via API
+    const newBaby = await babyStore.createBaby(payload)
+
+    console.log('API response:', newBaby)
+
+    if (newBaby) {
+      // Set as current baby
+      babyStore.setCurrentBaby(newBaby)
+      baby.value = newBaby
+
+      // Reset form
+      form.value = {
+        name: '',
+        nickname: '',
+        birthday: null,
+        gender: 'male'
+      }
+
+      // Close form
+      isEditing.value = false
+
+      // Load growth records
+      loadGrowthRecords()
+
+      // Show success message
+      message.success('宝宝信息创建成功！')
+    } else {
+      message.error('创建失败，请重试')
+    }
+  } catch (error: any) {
+    console.error('Failed to create baby:', error)
+    message.error(error.response?.data?.detail || error.message || '创建失败，请重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function updateBaby() {
+  if (!baby.value || !form.value.name || !form.value.birthday) {
+    message.warning('请填写宝宝姓名和生日')
+    return
+  }
+
+  loading.value = true
+  try {
+    // Convert timestamp to date string for API
+    const birthday = new Date(form.value.birthday).toISOString().split('T')[0]
+
+    // Update baby via API
+    const updatedBaby = await babyStore.updateBaby(baby.value.id, {
+      name: form.value.name,
+      nickname: form.value.nickname || undefined,
+      birthday: birthday,
+      gender: form.value.gender
+    })
+
+    if (updatedBaby) {
+      // Update local state
+      baby.value = updatedBaby
+
+      // Reset form
+      form.value = {
+        name: '',
+        nickname: '',
+        birthday: null,
+        gender: 'male'
+      }
+
+      // Close form
+      isEditing.value = false
+
+      message.success('宝宝信息更新成功！')
+    } else {
+      message.error('更新失败，请重试')
+    }
+  } catch (error: any) {
+    console.error('Failed to update baby:', error)
+    message.error(error.response?.data?.detail || '更新失败，请重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+function editBaby() {
+  if (baby.value) {
+    form.value = {
+      name: baby.value.name,
+      nickname: baby.value.nickname || '',
+      birthday: new Date(baby.value.birthday).getTime(),
+      gender: baby.value.gender
+    }
+    isEditing.value = true
+  }
+}
+
+function cancelEdit() {
+  isEditing.value = false
+  // Reset form
+  form.value = {
+    name: '',
+    nickname: '',
+    birthday: null,
+    gender: 'male'
+  }
 }
 
 function addGrowthRecord() {
@@ -50,11 +198,17 @@ function addGrowthRecord() {
 
 <template>
   <div class="profile-container">
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <n-spin size="large" />
+      <p>加载中...</p>
+    </div>
+
     <!-- Baby Info -->
     <n-card v-if="baby && !showForm" class="baby-card">
       <template #header>
         <h2>👶 宝宝档案</h2>
-        <n-button @click="showForm = true">编辑</n-button>
+        <n-button @click="editBaby">编辑</n-button>
       </template>
 
       <div class="baby-detail">
@@ -85,10 +239,10 @@ function addGrowthRecord() {
     <n-card v-if="showForm" class="form-card">
       <template #header>
         <h2>{{ baby ? '编辑' : '添加' }}宝宝信息</h2>
-        <n-button v-if="baby" text @click="showForm = false">取消</n-button>
+        <n-button v-if="baby" text @click="cancelEdit">取消</n-button>
       </template>
 
-      <n-form @submit.prevent="createBaby">
+      <n-form @submit.prevent="baby ? updateBaby() : createBaby()">
         <n-form-item label="姓名">
           <n-input v-model:value="form.name" placeholder="请输入宝宝姓名" />
         </n-form-item>
@@ -109,7 +263,22 @@ function addGrowthRecord() {
         </n-form-item>
 
         <n-form-item :show-label="false">
-          <n-button type="primary" attr-type="submit" size="large">
+          <n-button
+            type="primary"
+            attr-type="submit"
+            size="large"
+            :loading="loading"
+            :disabled="loading"
+            @click="() => {
+              console.log('Button clicked', form.value)
+              if (!form.value.name) {
+                message.warning('请输入宝宝姓名')
+              }
+              if (!form.value.birthday) {
+                message.warning('请选择宝宝生日')
+              }
+            }"
+          >
             {{ baby ? '保存' : '创建' }}
           </n-button>
         </n-form-item>
@@ -182,6 +351,7 @@ function addGrowthRecord() {
   padding: var(--spacing-md);
   max-width: 1000px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .baby-card,
@@ -248,5 +418,35 @@ function addGrowthRecord() {
 
 .fatigue-label {
   margin-left: var(--spacing-xs);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 0; /* Remove padding since App.vue handles it */
+  }
+
+  .parents-list {
+    grid-template-columns: 1fr;
+  }
+
+  .record-values {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .detail-row {
+    font-size: 14px;
+  }
 }
 </style>

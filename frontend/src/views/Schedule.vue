@@ -2,7 +2,12 @@
 import { ref, computed } from 'vue'
 import type { Task, TimeSlot } from '@/types'
 
-const selectedDate = ref(new Date().toISOString().split('T')[0])
+// Store timestamp for DatePicker, convert to string for display/API
+const selectedDateTimestamp = ref(new Date().getTime())
+const selectedDateString = computed(() => {
+  return new Date(selectedDateTimestamp.value).toISOString().split('T')[0]
+})
+
 const viewMode = ref<'day' | 'week'>('day')
 
 const timeSlots: { code: TimeSlot; name: string; icon: string; time: string }[] = [
@@ -148,6 +153,32 @@ function editTask(task: Task) {
 function getAssigneeColor(name: string): string {
   return name === '妈妈' ? '#EC4899' : '#3B82F6'
 }
+
+function getCategoryTag(category: string): string {
+  const tags: Record<string, string> = {
+    feeding: 'success',
+    diaper: 'info',
+    education: 'warning',
+    food: 'error',
+    outdoor: 'default',
+    hygiene: 'info',
+    medical: 'error'
+  }
+  return tags[category] || 'default'
+}
+
+function getCategoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    feeding: '喂奶',
+    diaper: '换尿布',
+    education: '早教',
+    food: '辅食',
+    outdoor: '户外',
+    hygiene: '清洁',
+    medical: '医疗'
+  }
+  return labels[category] || category
+}
 </script>
 
 <template>
@@ -160,7 +191,7 @@ function getAssigneeColor(name: string): string {
           <n-radio-button value="day">日视图</n-radio-button>
           <n-radio-button value="week">周视图</n-radio-button>
         </n-radio-group>
-        <n-date-picker v-model:value="selectedDate" />
+        <n-date-picker v-model:value="selectedDateTimestamp" type="date" />
       </n-space>
     </header>
 
@@ -289,39 +320,12 @@ function getAssigneeColor(name: string): string {
   </div>
 </template>
 
-<script setup lang="ts">
-function getCategoryTag(category: string): string {
-  const tags: Record<string, string> = {
-    feeding: 'success',
-    diaper: 'info',
-    education: 'warning',
-    food: 'error',
-    outdoor: 'default',
-    hygiene: 'info',
-    medical: 'error'
-  }
-  return tags[category] || 'default'
-}
-
-function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    feeding: '喂奶',
-    diaper: '换尿布',
-    education: '早教',
-    food: '辅食',
-    outdoor: '户外',
-    hygiene: '清洁',
-    medical: '医疗'
-  }
-  return labels[category] || category
-}
-</script>
-
 <style scoped>
 .schedule-container {
   padding: var(--spacing-md);
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
@@ -537,5 +541,54 @@ function getCategoryLabel(category: string): string {
 .placeholder-tip {
   font-size: 14px;
   margin-top: var(--spacing-sm);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .schedule-container {
+    padding: 0; /* Remove padding since App.vue handles it */
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .time-slot-card {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .slot-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .slot-progress {
+    align-self: flex-start;
+  }
+
+  .task-card {
+    padding: var(--spacing-sm);
+  }
+
+  .task-header {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .task-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .week-stats {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

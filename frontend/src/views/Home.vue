@@ -13,7 +13,12 @@ const taskStore = useTaskStore()
 const currentBaby = computed(() => babyStore.currentBaby)
 const loading = ref(false)
 
-const selectedDate = ref(new Date().toISOString().split('T')[0])
+// Store timestamp for DatePicker, convert to string for API
+const selectedDateTimestamp = ref(new Date().getTime())
+const selectedDateString = computed(() => {
+  return new Date(selectedDateTimestamp.value).toISOString().split('T')[0]
+})
+
 const momFatigue = ref(0.35)
 const dadFatigue = ref(0.25)
 
@@ -52,7 +57,7 @@ onMounted(async () => {
     if (currentBaby.value) {
       await taskStore.fetchTasks({
         baby_id: currentBaby.value.id,
-        date: selectedDate.value
+        date: selectedDateString.value
       })
     }
 
@@ -87,10 +92,16 @@ async function completeTask(task: Task) {
 
 <template>
   <div class="home-container">
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <n-spin size="large" />
+      <p>加载中...</p>
+    </div>
+
     <!-- Header -->
     <header class="header">
       <h1>📊 今日看板</h1>
-      <n-date-picker v-model:value="selectedDate" />
+      <n-date-picker v-model:value="selectedDateTimestamp" type="date" />
     </header>
 
     <!-- Baby Info Card -->
@@ -158,7 +169,11 @@ async function completeTask(task: Task) {
         </template>
 
         <div class="task-list">
+          <div v-if="getTasksBySlot(slot.code).length === 0" class="empty-tasks">
+            暂无任务
+          </div>
           <div
+            v-else
             v-for="task in getTasksBySlot(slot.code)"
             :key="task.id"
             class="task-item"
@@ -196,6 +211,7 @@ async function completeTask(task: Task) {
   padding: var(--spacing-md);
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
@@ -203,6 +219,7 @@ async function completeTask(task: Task) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-lg);
+  gap: var(--spacing-sm);
 }
 
 .header h1 {
@@ -218,6 +235,7 @@ async function completeTask(task: Task) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .baby-info h2 {
@@ -286,6 +304,7 @@ async function completeTask(task: Task) {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+  flex: 1;
 }
 
 .task-name {
@@ -301,5 +320,71 @@ async function completeTask(task: Task) {
 .task-actions {
   display: flex;
   gap: var(--spacing-sm);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .home-container {
+    padding: 0; /* Remove padding since App.vue handles it */
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .baby-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .baby-info h2 {
+    font-size: 20px;
+  }
+
+  .task-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .task-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .task-name {
+    font-size: 15px;
+  }
+
+  .task-meta {
+    font-size: 12px;
+  }
+
+  .loading-state {
+    min-height: 300px;
+  }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+.empty-tasks {
+  text-align: center;
+  padding: var(--spacing-xxl) var(--spacing-md);
+  color: var(--text-tertiary);
 }
 </style>

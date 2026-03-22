@@ -309,6 +309,7 @@ function getCategoryColor(category: string): string {
   padding: var(--spacing-md);
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
@@ -641,5 +642,39 @@ function getCategoryColor(category: string): string {
   border-radius: var(--radius-md);
   font-size: 14px;
   color: var(--text-secondary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .analytics-container {
+    padding: 0; /* Remove padding since App.vue handles it */
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-category-list {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .balance-visual {
+    height: 24px;
+  }
 }
 </style>

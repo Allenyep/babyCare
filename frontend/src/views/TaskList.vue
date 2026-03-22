@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { Task, TaskStatus } from '@/types'
+import { h } from 'vue'
 
 // Mock data - TODO: Replace with API calls
 const tasks = ref<Task[]>([
@@ -34,7 +35,11 @@ const tasks = ref<Task[]>([
   }
 ])
 
-const selectedDate = ref(new Date().toISOString().split('T')[0])
+// Store timestamp for DatePicker
+const selectedDateTimestamp = ref(new Date().getTime())
+const selectedDateString = computed(() => {
+  return new Date(selectedDateTimestamp.value).toISOString().split('T')[0]
+})
 
 // Filters
 const statusFilter = ref<TaskStatus | 'all'>('all')
@@ -56,6 +61,32 @@ function deleteTask(task: Task) {
 function createTask() {
   // TODO: Open task creation modal
 }
+
+function getCategoryTag(category: string) {
+  const tags: Record<string, string> = {
+    feeding: 'success',
+    diaper: 'info',
+    education: 'warning',
+    food: 'error',
+    outdoor: 'default',
+    hygiene: 'info',
+    medical: 'error'
+  }
+  return tags[category] || 'default'
+}
+
+function getCategoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    feeding: '喂奶',
+    diaper: '换尿布',
+    education: '早教',
+    food: '辅食',
+    outdoor: '户外',
+    hygiene: '清洁',
+    medical: '医疗'
+  }
+  return labels[category] || category
+}
 </script>
 
 <template>
@@ -72,14 +103,18 @@ function createTask() {
     <n-card class="filters-card">
       <n-space>
         <span>日期:</span>
-        <n-date-picker v-model:value="selectedDate" />
+        <n-date-picker v-model:value="selectedDateTimestamp" type="date" />
         <n-divider vertical />
         <span>状态:</span>
-        <n-select v-model:value="statusFilter" style="width: 150px">
-          <n-option value="all">全部</n-option>
-          <n-option value="pending">待完成</n-option>
-          <n-option value="completed">已完成</n-option>
-        </n-select>
+        <n-select
+          v-model:value="statusFilter"
+          :options="[
+            { value: 'all', label: '全部' },
+            { value: 'pending', label: '待完成' },
+            { value: 'completed', label: '已完成' }
+          ]"
+          style="width: 150px"
+        />
       </n-space>
     </n-card>
 
@@ -141,39 +176,12 @@ function createTask() {
   </div>
 </template>
 
-<script setup lang="ts">
-function getCategoryTag(category: string) {
-  const tags: Record<string, string> = {
-    feeding: 'success',
-    diaper: 'info',
-    education: 'warning',
-    food: 'error',
-    outdoor: 'default',
-    hygiene: 'info',
-    medical: 'error'
-  }
-  return tags[category] || 'default'
-}
-
-function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    feeding: '喂奶',
-    diaper: '换尿布',
-    education: '早教',
-    food: '辅食',
-    outdoor: '户外',
-    hygiene: '清洁',
-    medical: '医疗'
-  }
-  return labels[category] || category
-}
-</script>
-
 <style scoped>
 .tasks-container {
   padding: var(--spacing-md);
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
@@ -272,5 +280,40 @@ function getCategoryLabel(category: string): string {
   text-align: center;
   padding: var(--spacing-xxl) 0;
   color: var(--text-tertiary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .tasks-container {
+    padding: 0; /* Remove padding since App.vue handles it */
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .task-card {
+    padding: var(--spacing-sm);
+  }
+
+  .task-header {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .task-meta {
+    flex-wrap: wrap;
+  }
+
+  .task-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 </style>

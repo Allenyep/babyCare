@@ -122,3 +122,70 @@ body {
 .fatigue-moderate { color: var(--warning-color); }
 .fatigue-high { color: #F97316; }
 .fatigue-severe { color: var(--error-color); }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  /* Adjust spacing for mobile */
+  :root {
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+  }
+
+  /* Make containers full width on mobile */
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+
+  /* Adjust cards for mobile */
+  .card {
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+  }
+
+  /* Add safe area padding for notched devices */
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 60px);
+  }
+
+  /* Hide desktop elements */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Mobile specific adjustments */
+  h1 {
+    font-size: 24px !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+  }
+
+  h3 {
+    font-size: 18px !important;
+  }
+}
+
+/* iPad adaptation */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+
+  h1 {
+    font-size: 26px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Hide mobile elements on desktop */
+  .mobile-only {
+    display: none !important;
+  }
+
+  /* Remove bottom padding on desktop */
+  body {
+    padding-bottom: 0;
+  }
+}
