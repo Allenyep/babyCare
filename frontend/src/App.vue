@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { h } from 'vue'
 import { RouterView } from 'vue-router'
 
 const appTitle = 'BabyCare'
@@ -65,10 +65,6 @@ const appTitle = 'BabyCare'
     </n-layout>
   </n-layout>
 </template>
-
-<script setup lang="ts">
-import { h } from 'vue'
-</script>
 
 <style scoped>
 .sidebar-header {

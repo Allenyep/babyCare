@@ -1,7 +1,7 @@
-from __future__ import annotations
 
 from datetime import datetime, date
-from sqlalchemy import String, Integer, Float, Text, ForeignKey, JSON, Boolean
+from typing import Optional
+from sqlalchemy import String, Integer, Float, Text, ForeignKey, JSON, Boolean, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
 
@@ -15,8 +15,8 @@ class TaskCompletion(Base):
     parent_id: Mapped[int] = mapped_column(ForeignKey("parents.id", ondelete="CASCADE"), nullable=False)
 
     completed_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
-    notes: Mapped[str | None] = mapped_column(Text)
-    rating: Mapped[int | None] = mapped_column(Integer)  # Quality rating 1-5
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    rating: Mapped[Optional[int]] = mapped_column(Integer)  # Quality rating 1-5
 
     # Relationships
     task: Mapped["Task"] = relationship("Task", back_populates="completion_records")
@@ -29,7 +29,7 @@ class Schedule(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     baby_id: Mapped[int] = mapped_column(ForeignKey("babies.id", ondelete="CASCADE"), nullable=False, index=True)
-    date: Mapped[date] = mapped_column(date, nullable=False, index=True)
+    schedule_date: Mapped[date] = mapped_column("date", Date, nullable=False, index=True)
 
     # Statistics
     total_tasks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -42,7 +42,7 @@ class Schedule(Base):
 
     # Special flags
     is_special_day: Mapped[bool] = mapped_column(default=False, nullable=False)
-    special_notes: Mapped[str | None] = mapped_column(Text)
+    special_notes: Mapped[Optional[str]] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(default=datetime.now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(default=datetime.now, onupdate=datetime.now, nullable=False)

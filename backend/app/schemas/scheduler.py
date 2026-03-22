@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
-from datetime import date, time
+from datetime import date as date_type, time, datetime
 from enum import Enum
 
 
@@ -48,7 +48,7 @@ class ScheduledTask(BaseModel):
 
 class DailySchedule(BaseModel):
     """每日日程"""
-    date: date = Field(..., description="日期")
+    schedule_date: date_type = Field(..., alias="date", description="日期")
     baby_id: int = Field(..., description="宝宝ID")
     baby_name: str = Field(..., description="宝宝名称")
     baby_age_months: int = Field(..., description="宝宝月龄")
@@ -76,7 +76,7 @@ class ScheduleAdjustment(BaseModel):
 class GenerateScheduleRequest(BaseModel):
     """生成日程请求"""
     baby_id: int = Field(..., description="宝宝ID")
-    date: date = Field(..., description="目标日期")
+    target_date: date_type = Field(..., alias="date", description="目标日期")
     preferences: Optional[SchedulerPreference] = Field(None, description="调度偏好")
     include_knowledge_tasks: bool = Field(default=True, description="是否包含知识库任务")
     include_recurring_tasks: bool = Field(default=True, description="是否包含重复任务")

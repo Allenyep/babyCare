@@ -1,6 +1,6 @@
-from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Optional
 from sqlalchemy import Float, Integer, Date, String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
@@ -12,10 +12,10 @@ class GrowthRecord(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     baby_id: Mapped[int] = mapped_column(ForeignKey("babies.id", ondelete="CASCADE"), nullable=False, index=True)
     record_date: Mapped[date] = mapped_column(Date, nullable=False)
-    weight: Mapped[float | None] = mapped_column(Float)  # kg
-    height: Mapped[float | None] = mapped_column(Float)  # cm
-    head_circumference: Mapped[float | None] = mapped_column(Float)  # cm
-    notes: Mapped[str | None] = mapped_column(Text)
+    weight: Mapped[Optional[float]] = mapped_column(Float)  # kg
+    height: Mapped[Optional[float]] = mapped_column(Float)  # cm
+    head_circumference: Mapped[Optional[float]] = mapped_column(Float)  # cm
+    notes: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now, nullable=False)
 
     # Relationship
