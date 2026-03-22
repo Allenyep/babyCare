@@ -1,120 +1,4 @@
 <script setup lang="ts">
-import { useBabyStore } from '@/stores/baby'
-
-const babyStore = useBabyStore()
-
-onMounted(() => {
-  // TODO: Load current baby
-})
-</script>
-
-<template>
-  <div class="home-container">
-    <!-- Header -->
-    <header class="header">
-      <h1>📊 今日看板</h1>
-      <n-date-picker v-model:value="selectedDate" />
-    </header>
-
-    <!-- Baby Info Card -->
-    <n-card v-if="currentBaby" class="baby-card">
-      <div class="baby-header">
-        <div class="baby-info">
-          <h2>👶 {{ currentBaby.nickname || currentBaby.name }}</h2>
-          <n-tag type="info">{{ currentBaby.age_months }} 个月</n-tag>
-        </div>
-        <n-button @click="switchBaby">切换宝宝</n-button>
-      </div>
-    </n-card>
-
-    <!-- Today's Overview -->
-    <n-card class="overview-card">
-      <template #header>
-        <h3>📊 今日概览</h3>
-      </template>
-
-      <div class="overview-stats">
-        <div class="stat-item">
-          <span class="stat-label">已完成</span>
-          <span class="stat-value">{{ completedTasks }}/{{ totalTasks }}</span>
-          <n-progress
-            type="line"
-            :percentage="completionRate"
-            :show-indicator="false"
-            :height="8"
-          />
-        </div>
-
-        <div class="stat-item">
-          <span class="stat-label">妈妈疲劳度</span>
-          <n-progress
-            type="line"
-            :percentage="momFatigue * 100"
-            :color="getFatigueColor(momFatigue)"
-            :height="8"
-          />
-          <span class="stat-value">{{ momFatigue.toFixed(2) }}</span>
-        </div>
-
-        <div class="stat-item">
-          <span class="stat-label">爸爸疲劳度</span>
-          <n-progress
-            type="line"
-            :percentage="dadFatigue * 100"
-            :color="getFatigueColor(dadFatigue)"
-            :height="8"
-          />
-          <span class="stat-value">{{ dadFatigue.toFixed(2) }}</span>
-        </div>
-      </div>
-    </n-card>
-
-    <!-- Tasks by Time Slot -->
-    <div class="time-slots">
-      <n-card
-        v-for="slot in timeSlots"
-        :key="slot.code"
-        class="time-slot-card"
-      >
-        <template #header>
-          <h3>{{ slot.icon }} {{ slot.name }} ({{ slot.time }})</h3>
-        </template>
-
-        <div class="task-list">
-          <div
-            v-for="task in getTasksBySlot(slot.code)"
-            :key="task.id"
-            class="task-item"
-            :class="{ completed: task.status === 'completed' }"
-          >
-            <div class="task-info">
-              <span class="task-name">{{ task.name }}</span>
-              <span class="task-meta">
-                {{ task.category }} | {{ task.duration_minutes }}min
-                <span v-if="task.assigned_to_detail">
-                  | {{ task.assigned_to_detail.name }}
-                </span>
-              </span>
-            </div>
-            <div class="task-actions">
-              <n-button
-                v-if="task.status === 'pending'"
-                size="small"
-                type="success"
-                @click="completeTask(task)"
-              >
-                ✓
-              </n-button>
-              <n-tag v-else type="success">已完成</n-tag>
-            </div>
-          </div>
-        </div>
-      </n-card>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useBabyStore } from '@/stores/baby'
 import { useTaskStore } from '@/stores/task'
@@ -200,6 +84,112 @@ async function completeTask(task: Task) {
   await taskStore.completeTask(task.id)
 }
 </script>
+
+<template>
+  <div class="home-container">
+    <!-- Header -->
+    <header class="header">
+      <h1>📊 今日看板</h1>
+      <n-date-picker v-model:value="selectedDate" />
+    </header>
+
+    <!-- Baby Info Card -->
+    <n-card v-if="currentBaby" class="baby-card">
+      <div class="baby-header">
+        <div class="baby-info">
+          <h2>👶 {{ currentBaby.nickname || currentBaby.name }}</h2>
+          <n-tag type="info">{{ currentBaby.age_months }} 个月</n-tag>
+        </div>
+        <n-button @click="switchBaby">切换宝宝</n-button>
+      </div>
+    </n-card>
+
+    <!-- Today's Overview -->
+    <n-card class="overview-card">
+      <template #header>
+        <h3>📊 今日概览</h3>
+      </template>
+
+      <div class="overview-stats">
+        <div class="stat-item">
+          <span class="stat-label">已完成</span>
+          <span class="stat-value">{{ completedTasksCount }}/{{ totalTasks }}</span>
+          <n-progress
+            type="line"
+            :percentage="completionRate"
+            :show-indicator="false"
+            :height="8"
+          />
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">妈妈疲劳度</span>
+          <n-progress
+            type="line"
+            :percentage="momFatigue * 100"
+            :color="getFatigueColor(momFatigue)"
+            :height="8"
+          />
+          <span class="stat-value">{{ momFatigue.toFixed(2) }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">爸爸疲劳度</span>
+          <n-progress
+            type="line"
+            :percentage="dadFatigue * 100"
+            :color="getFatigueColor(dadFatigue)"
+            :height="8"
+          />
+          <span class="stat-value">{{ dadFatigue.toFixed(2) }}</span>
+        </div>
+      </div>
+    </n-card>
+
+    <!-- Tasks by Time Slot -->
+    <div class="time-slots">
+      <n-card
+        v-for="slot in timeSlots"
+        :key="slot.code"
+        class="time-slot-card"
+      >
+        <template #header>
+          <h3>{{ slot.icon }} {{ slot.name }} ({{ slot.time }})</h3>
+        </template>
+
+        <div class="task-list">
+          <div
+            v-for="task in getTasksBySlot(slot.code)"
+            :key="task.id"
+            class="task-item"
+            :class="{ completed: task.status === 'completed' }"
+          >
+            <div class="task-info">
+              <span class="task-name">{{ task.name }}</span>
+              <span class="task-meta">
+                {{ task.category }} | {{ task.duration_minutes }}min
+                <span v-if="task.assigned_to_detail">
+                  | {{ task.assigned_to_detail.name }}
+                </span>
+              </span>
+            </div>
+            <div class="task-actions">
+              <n-button
+                v-if="task.status === 'pending'"
+                size="small"
+                type="success"
+                @click="completeTask(task)"
+              >
+                ✓
+              </n-button>
+              <n-tag v-else type="success">已完成</n-tag>
+            </div>
+          </div>
+        </div>
+      </n-card>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .home-container {
