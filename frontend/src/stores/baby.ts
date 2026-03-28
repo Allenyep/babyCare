@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/api/client'
+import { api } from '@/api/client'
 
 export interface Baby {
   id: number
@@ -8,8 +8,9 @@ export interface Baby {
   nickname?: string
   birthday: string
   gender: 'male' | 'female'
-  avatar?: string
+  avatar?: string | null
   age_months?: number
+  created_at?: string
 }
 
 export const useBabyStore = defineStore('baby', () => {
@@ -54,10 +55,16 @@ export const useBabyStore = defineStore('baby', () => {
     loading.value = true
     error.value = null
     try {
+      console.log('[BabyStore] Creating baby with data:', data)
       const response = await api.babies.create(data)
+      console.log('[BabyStore] API response:', response)
+      console.log('[BabyStore] Response data:', response.data)
       babies.value.push(response.data)
       return response.data
     } catch (e: any) {
+      console.error('[BabyStore] Error creating baby:', e)
+      console.error('[BabyStore] Error response:', e.response)
+      console.error('[BabyStore] Error message:', e.message)
       error.value = e.message
       return null
     } finally {

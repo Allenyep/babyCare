@@ -32,6 +32,8 @@ class BabyCreate(BabyBase):
 class BabyUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     nickname: Optional[str] = Field(None, max_length=50)
+    birthday: Optional[date] = None
+    gender: Optional[GenderEnum] = None
     avatar: Optional[str] = None
 
 

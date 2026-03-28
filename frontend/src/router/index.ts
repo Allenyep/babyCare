@@ -39,6 +39,12 @@ const router = createRouter({
       name: 'settings',
       component: () => import('../views/Settings.vue'),
       meta: { title: '设置' }
+    },
+    {
+      path: '/animation-test',
+      name: 'animation-test',
+      component: () => import('../views/AnimationTest.vue'),
+      meta: { title: '动画测试' }
     }
   ]
 })

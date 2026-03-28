@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "http://192.168.1.106:5173"
+        "http://192.168.1.100:5173",
+        # 允许所有内网设备访问
+        "http://192.168.1.*:5173"
     ]
 
     # API Keys

@@ -57,7 +57,7 @@ class Task(Base):
     baby: Mapped["Baby"] = relationship("Baby", back_populates="tasks")
     template: Mapped["TaskTemplate"] = relationship("TaskTemplate")
     schedule: Mapped["Schedule"] = relationship("Schedule", back_populates="tasks")
-    assigned_to_detail: Mapped["Parent"] = relationship("Parent", foreign_keys="assigned_to", back_populates="tasks")
+    # assigned_to_detail relationship removed due to circular dependency issues
     completion_records: Mapped[list["TaskCompletion"]] = relationship(
         "TaskCompletion", back_populates="task", cascade="all, delete-orphan"
     )

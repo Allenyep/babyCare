@@ -17,6 +17,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # 开发环境：允许所有内网访问
+    allow_origin_regex='http://192\.168\..*:.*',
 )
 
 
